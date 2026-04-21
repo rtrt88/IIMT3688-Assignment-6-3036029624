@@ -1,4 +1,4 @@
-Copilot said: Mini-Assignment 6: Security & Ethics Integration =============================================== System overview --------------- Problem:
+Mini-Assignment 6: Security & Ethics Integration =============================================== System overview --------------- Problem:
 Mini-Assignment 6: Security & Ethics Integration
 
 System overview

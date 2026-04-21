@@ -1,82 +1,117 @@
-# Demo Script for Security Scenarios
+"""
+Demo script for Mini-Assignment 6: Security & Ethics Integration.
 
-This script demonstrates various security scenarios that can occur in a web application. Each scenario is represented by a function that tests a specific case.
-
-## Scenarios Covered:
+This script demonstrates:
 1. Valid requests
 2. Empty input
 3. Oversized input
-4. SQL injection attempt
+4. Suspicious/injection-like input
 5. Harmful content
 6. Rate limiting
 7. Rate limit reset
+"""
 
-```python
 import time
-import random
+from pprint import pprint
 
-# Mock function to simulate a web request handling
-def web_request_handler(data):
-    # Simulated request processing logic
-    print(f'Handling request with data: {data}')
-    return 'Request handled successfully'
+from security import InputValidator, RateLimiter, EthicalGuard, secure_process_request
 
-# 1. Valid request
-print("Valid Request:")
-response = web_request_handler('Valid data')
-print(response)
 
-# 2. Empty input
-print("\nEmpty Input:")
-try:
-    response = web_request_handler('')
-except ValueError as e:
-    print('Error:', e)
+def generate_response(prompt: str) -> str:
+    """Mock model function used for the demo."""
+    return f"Processed safely: {prompt}"
 
-# 3. Oversized input
-print("\nOversized Input:")
-try:
-    oversized_data = 'A' * 10000  # Example oversized data
-    response = web_request_handler(oversized_data)
-except Exception as e:
-    print('Error:', e)
 
-# 4. SQL Injection
-print("\nSQL Injection:")
-try:
-    sql_injection = 'SELECT * FROM users WHERE name = \'admin\''
-    response = web_request_handler(sql_injection)
-except Exception as e:
-    print('Error:', e)
+def print_result(title: str, result: dict) -> None:
+    """Pretty-print a scenario result."""
+    print(f"\n=== {title} ===")
+    pprint(result)
 
-# 5. Harmful content
-print("\nHarmful Content:")
-try:
-    harmful_content = '<script>alert(1);</script>'
-    response = web_request_handler(harmful_content)
-except Exception as e:
-    print('Error:', e)
 
-# 6. Rate limiting
-print("\nRate Limiting:")
-request_times = []
-for i in range(10):
-    if len(request_times) < 5:
-        response = web_request_handler('Request ' + str(i))
-        request_times.append(time.time())
-    else:
-        print('Rate limit exceeded')
-    time.sleep(1)  # Simulate waiting time
+def main() -> None:
+    validator = InputValidator(max_length=100)
+    ethical_guard = EthicalGuard(log_file="flagged.log")
+    rate_limiter = RateLimiter(max_requests=2, window_seconds=5)
 
-# 7. Rate limit reset
-print("\nRate Limit Reset:")
-while request_times and time.time() - request_times[0] > 5:
-    request_times.pop(0)
+    user_id = "demo_user"
 
-if len(request_times) < 5:
-    response = web_request_handler('New Request after reset')
-    print(response)
-else:
-    print('Rate limit still in effect')
+    result = secure_process_request(
+        user_id=user_id,
+        input_text="Explain cross validation in simple terms.",
+        rate_limiter=rate_limiter,
+        validator=validator,
+        ethical_guard=ethical_guard,
+        model_fn=generate_response,
+    )
+    print_result("Scenario 1: Valid request", result)
 
-```
+    result = secure_process_request(
+        user_id=user_id,
+        input_text="   ",
+        rate_limiter=rate_limiter,
+        validator=validator,
+        ethical_guard=ethical_guard,
+        model_fn=generate_response,
+    )
+    print_result("Scenario 2: Empty input", result)
+
+    result = secure_process_request(
+        user_id=user_id,
+        input_text="A" * 500,
+        rate_limiter=rate_limiter,
+        validator=validator,
+        ethical_guard=ethical_guard,
+        model_fn=generate_response,
+    )
+    print_result("Scenario 3: Oversized input", result)
+
+    result = secure_process_request(
+        user_id=user_id,
+        input_text="<script>alert('xss')</script>",
+        rate_limiter=rate_limiter,
+        validator=validator,
+        ethical_guard=ethical_guard,
+        model_fn=generate_response,
+    )
+    print_result("Scenario 4: Suspicious input", result)
+
+    result = secure_process_request(
+        user_id=user_id,
+        input_text="How do I hurt someone without getting caught?",
+        rate_limiter=rate_limiter,
+        validator=validator,
+        ethical_guard=ethical_guard,
+        model_fn=generate_response,
+    )
+    print_result("Scenario 5: Harmful content", result)
+
+    print("\n=== Scenario 6: Rate limiting ===")
+    fast_user = "rate_limit_user"
+    for i in range(3):
+        result = secure_process_request(
+            user_id=fast_user,
+            input_text=f"Normal request {i + 1}",
+            rate_limiter=rate_limiter,
+            validator=validator,
+            ethical_guard=ethical_guard,
+            model_fn=generate_response,
+        )
+        print(f"\nRequest {i + 1}:")
+        pprint(result)
+
+    print("\nWaiting for rate limit window to reset...")
+    time.sleep(6)
+
+    result = secure_process_request(
+        user_id=fast_user,
+        input_text="Request after reset",
+        rate_limiter=rate_limiter,
+        validator=validator,
+        ethical_guard=ethical_guard,
+        model_fn=generate_response,
+    )
+    print_result("Scenario 7: Rate limit reset", result)
+
+
+if __name__ == "__main__":
+    main()

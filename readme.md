@@ -45,9 +45,9 @@ Extremely long inputs, empty inputs, or control-character-laden text may break a
 
 ## 3. Security Measures Implemented
 
-## 3.1 Input Validation and Sanitization
+### 3.1 Input Validation and Sanitization
 
-### What it does
+#### What it does
 The `InputValidator` class checks:
 - whether the input is a string
 - whether the input is non-empty after trimming whitespace
@@ -59,10 +59,10 @@ The validator also sanitizes input by:
 - removing control characters where appropriate
 - neutralizing obvious harmful markup patterns while preserving benign meaning as much as possible
 
-### Why it matters
+#### Why it matters
 This step prevents malformed or suspicious input from being forwarded to later stages of the system. It also improves robustness by failing early and returning clear user-facing error messages.
 
-### Threats addressed
+#### Threats addressed
 - malformed input
 - oversized input
 - prompt injection-style content
@@ -71,9 +71,9 @@ This step prevents malformed or suspicious input from being forwarded to later s
 
 ---
 
-## 3.2 Rate Limiting
+### 3.2 Rate Limiting
 
-### What it does
+#### What it does
 The `RateLimiter` class implements per-user request tracking using an in-memory sliding window. Each user is allowed a configurable number of requests within a specified time period, such as 10 requests per 60 seconds.
 
 If a user exceeds the limit, the system:
@@ -81,19 +81,19 @@ If a user exceeds the limit, the system:
 - returns a clear error message
 - allows requests again once the time window has passed
 
-### Why it matters
+#### Why it matters
 Rate limiting helps prevent spam, accidental overload, and simple abuse scenarios. It also ensures that the workflow behaves predictably during testing and demonstration.
 
-### Threats addressed
+#### Threats addressed
 - abusive repeated usage
 - denial-of-service through request flooding
 - unfair resource consumption
 
 ---
 
-## 3.3 Ethical Guardrails
+### 3.3 Ethical Guardrails
 
-### What it does
+#### What it does
 The `EthicalGuard` class applies rule-based content filtering to detect harmful or inappropriate requests. It checks for patterns associated with:
 - violence
 - illegal wrongdoing
@@ -106,10 +106,10 @@ When content is flagged, the system:
 - records the flagged content in memory
 - appends an audit entry to `flagged.log` for later review
 
-### Why it matters
+#### Why it matters
 This component ensures that the AI agent does not provide assistance for clearly unsafe or unethical requests. It also creates an auditable record of flagged content for accountability and review.
 
-### Threats addressed
+#### Threats addressed
 - harmful requests
 - illegal requests
 - abusive or hateful content
@@ -117,9 +117,9 @@ This component ensures that the AI agent does not provide assistance for clearly
 
 ---
 
-## 3.4 Integration Workflow
+### 3.4 Integration Workflow
 
-### What it does
+#### What it does
 The `secure_process_request(...)` function integrates all security components into one callable workflow. The processing order is:
 
 1. validate and sanitize input  
@@ -128,7 +128,7 @@ The `secure_process_request(...)` function integrates all security components in
 4. call the model only if all checks pass  
 5. return a structured dictionary response
 
-The returned result includes fields such as:
+The returned result includes:
 - `success`
 - `status`
 - `message`
@@ -136,21 +136,27 @@ The returned result includes fields such as:
 - `response`
 - `flags`
 
-### Why it matters
-The integrated pipeline is important because the assignment requires the security mechanisms to be exercised before and after model execution in a callable script or backend-style workflow. A unified function also makes the system easier to test, demonstrate, and extend.
+The main status values used in this implementation are:
+- `ok`
+- `validation_error`
+- `rate_limited`
+- `blocked`
 
-### Threats addressed
+#### Why it matters
+The integrated pipeline is important because the assignment requires the security mechanisms to be exercised in a callable workflow. A unified function also makes the system easier to test, demonstrate, and extend.
+
+#### Threats addressed
 This workflow combines all earlier protections and ensures consistent, reliable behavior across requests.
 
 ---
 
 ## 4. How to Use the Security Module
 
-## 4.1 Requirements
-- Python 3.8 or above
-- Standard library only is sufficient for the core implementation
+### 4.1 Requirements
+- Python 3.8+
+- No third-party packages are required for the core implementation
 
-## 4.2 Run the Demo
+### 4.2 Run the Demo
 To run the demonstration script:
 
 ```bash
